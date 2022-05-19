@@ -13,13 +13,10 @@ public:
       std::vector<std::regex> reject;
       std::vector<std::regex> match;
    };
-   using pattern = std::pair<char, std::string>;
    
    void set_options(const std::set<std::string>& options);
-   lists build_regexes(const std::vector<pattern>& patterns);
+   lists get_regexes();
 private:
    // Options
    std::regex_constants::syntax_option_type flags;
 };
-
-std::vector<GrepFactory::pattern> read_patterns();

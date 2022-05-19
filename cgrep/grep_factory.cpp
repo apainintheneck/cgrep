@@ -16,41 +16,15 @@ void GrepFactory::set_options(const std::set<std::string>& options) {
    }
 }
 
-GrepFactory::lists GrepFactory::build_regexes(const std::vector<pattern> &patterns) {
-   GrepFactory::lists regexes;
-
-   for(const auto& pattern : patterns) {
-      switch(pattern.first) {
-         case '+':
-            regexes.require.push_back(
-               std::regex(pattern.second, flags)
-            );
-            break;
-         case '-':
-            regexes.reject.push_back(
-               std::regex(pattern.second, flags)
-            );
-            break;
-         case '=':
-            regexes.match.push_back(
-               std::regex(pattern.second, flags)
-            );
-            break;
-      }
-   }
-   
-   return regexes;
-}
-
 // Modify this to allow reading patterns from a file instead of just standard out.
-std::vector<GrepFactory::pattern> read_patterns() {
+GrepFactory::lists GrepFactory::get_regexes() {
    std::cout << "Enter grep patterns starting with...\n";
    std::cout << "  '+' is for required patterns\n";
    std::cout << "  '-' is for rejected patterns\n";
    std::cout << "  '=' is for matched patterns\n";
    std::cout << "Enter a blank line to submit.\n";
    
-   std::vector<GrepFactory::pattern> patterns;
+   GrepFactory::lists regexes;
    
    std::cout << "> ";
    std::string buffer;
@@ -58,13 +32,23 @@ std::vector<GrepFactory::pattern> read_patterns() {
       if(buffer.empty()) break;
       
       switch(buffer.front()) {
+         // For now just have the first char be the token.
+         // Then a space.
+         // Then the pattern.
          case '+':
+            regexes.require.push_back(
+               std::regex(buffer.substr(2), flags)
+            );
+            break;
          case '-':
+            regexes.reject.push_back(
+               std::regex(buffer.substr(2), flags)
+            );
+            break;
          case '=':
-            // For now just have the first char be the token.
-            // Then a space.
-            // Then the pattern.
-            patterns.push_back({ buffer.front(), buffer.substr(2) });
+            regexes.match.push_back(
+               std::regex(buffer.substr(2), flags)
+            );
             break;
          default:
             std::cout << "Invalid option (" << buffer.front() << ")\n";
@@ -75,5 +59,5 @@ std::vector<GrepFactory::pattern> read_patterns() {
    
    std::cout << '\n';
    
-   return patterns;
+   return regexes;
 }

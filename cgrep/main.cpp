@@ -1,7 +1,6 @@
 #include <regex>
 #include <iostream>
 #include <vector>
-#include <utility>
 #include <string>
 #include <fstream>
 #include <algorithm>
@@ -67,13 +66,11 @@ int main(int argc, const char * argv[]) {
    GrepFactory factory;
    factory.set_options(get_options(argc, argv));
    
-   const auto filepaths = glob(get_args(argc, argv));
+   const auto filepaths = glob_files(get_args(argc, argv));
    if(filepaths.empty()) return 1; // more specific error + msg in the future
-   
-   const auto patterns = read_patterns();
-   if(patterns.empty()) return 1; // more specific error + msg in the future
-   
-   const auto regexes = factory.build_regexes(patterns);
-   
+
+   const auto regexes = factory.get_regexes();
+   if(regexes.match.empty()) return 1; // more specific error + msg in the future
+
    grep(filepaths, regexes);
 }
