@@ -64,12 +64,13 @@ void grep(std::vector<std::string> filenames, GrepFactory::lists regexes) {
 
 int main(int argc, const char * argv[]) {
    GrepFactory factory;
-   factory.set_options(get_options(argc, argv));
+   const auto options = get_options(argc, argv);
+   factory.set_options(options);
    
    const auto filepaths = glob_files(get_args(argc, argv));
    if(filepaths.empty()) return 1; // more specific error + msg in the future
-
-   const auto regexes = factory.get_regexes();
+   
+   const auto regexes = factory.get_regexes(options);
    if(regexes.match.empty()) return 1; // more specific error + msg in the future
 
    grep(filepaths, regexes);
