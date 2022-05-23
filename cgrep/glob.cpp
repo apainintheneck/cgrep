@@ -27,7 +27,7 @@ std::vector<std::string> glob(const std::vector<std::string>& patterns) {
 std::vector<std::string> glob_files(const std::vector<std::string>& patterns) {
    auto paths = glob(patterns);
    const auto last = std::remove_if(paths.begin(), paths.end(),
-                              [](const auto& path){ return path.back() == '/'; });
+                                    [](const auto& path){ return path.back() == '/'; });
    paths.erase(last, paths.end());
    return paths;
 }

@@ -4,10 +4,36 @@
 #include <string>
 #include <fstream>
 #include <algorithm>
+#include <sysexits.h>
 
 #include "grep_factory.hpp"
 #include "glob.hpp"
 #include "parse_input.hpp"
+
+void help() {
+   std::cout <<
+R"~(
+[cgrep]
+-------
+Conditionally grep files using multiple
+required(+), rejected(-) and matched(=) patterns.
+   
+[usage]
+-------
+cgrep [-iEfh] [-f=patterns] [file ...]
+   
+[options]
+---------
+-i / --ignore-case
+   Sets grep to ignore case when matching.
+-E / --extended-regexp
+   Sets pattern matching to egrep.
+-f= / --file=
+   Reads patterns from a file.
+-h / --help
+   Shows this page.
+)~";
+}
 
 void print(const std::vector<std::string>& lines) {
    for(const auto& line : lines) {
@@ -63,15 +89,26 @@ void grep(std::vector<std::string> filenames, GrepFactory::lists regexes) {
 }
 
 int main(int argc, const char * argv[]) {
-   GrepFactory factory;
    const auto options = get_options(argc, argv);
+   if(argc == 1 or options.count("-h") or options.count("--help")) {
+      help();
+      exit(EXIT_SUCCESS);
+   }
+   
+   GrepFactory factory;
    factory.set_options(options);
    
    const auto filepaths = glob_files(get_args(argc, argv));
-   if(filepaths.empty()) return 1; // more specific error + msg in the future
+   if(filepaths.empty()) {
+      std::cout << "No files to search\n";
+      exit(EXIT_FAILURE);
+   }
    
    const auto regexes = factory.get_regexes(options);
-   if(regexes.match.empty()) return 1; // more specific error + msg in the future
+   if(regexes.match.empty()) {
+      std::cout << "No patterns to match (as denoted by the '=')\n";
+      exit(EX_USAGE);
+   }
 
    grep(filepaths, regexes);
 }

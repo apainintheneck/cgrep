@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sysexits.h>
 
 void GrepFactory::set_options(const std::map<std::string, std::string>& options) {
    flags = std::regex::optimize;
@@ -36,9 +37,9 @@ std::string parse_pattern(const std::string& line) {
 // From stdin
 GrepFactory::lists GrepFactory::get_regexes() {
    std::cout << "# Enter grep patterns starting with...\n";
-   std::cout << "#   '+' is for required patterns\n";
-   std::cout << "#   '-' is for rejected patterns\n";
-   std::cout << "#   '=' is for matched patterns\n";
+   std::cout << "#   '+' for required patterns\n";
+   std::cout << "#   '-' for rejected patterns\n";
+   std::cout << "#   '=' for matched patterns\n";
    std::cout << "# Enter a blank line to submit.\n";
    
    GrepFactory::lists regexes;
@@ -67,6 +68,7 @@ GrepFactory::lists GrepFactory::get_regexes() {
          default:
             std::cout << "Invalid option (" << buffer.front() << ")\n";
             std::cout << "Use one of ['+', '-', '=']\n";
+            break;
       }
       std::cout << "> ";
    }
@@ -79,7 +81,10 @@ GrepFactory::lists GrepFactory::get_regexes() {
 // From file
 GrepFactory::lists GrepFactory::get_regexes(const std::string& filepath) {
    std::ifstream file(filepath);
-   if(not file.is_open()) return {};
+   if(not file.is_open()) {
+      std::cout << "Unable to open pattern file: " << filepath << '\n';
+      exit(EX_NOINPUT);
+   }
    
    GrepFactory::lists regexes;
    
