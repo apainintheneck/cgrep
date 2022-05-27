@@ -22,7 +22,7 @@ private:
    Patterns get_patterns_from_file();
    
    // Options
-   std::regex_constants::syntax_option_type flags;
+   std::regex_constants::syntax_option_type flags_;
    // Filepath
-   std::string filepath;
+   std::string filepath_;
 };

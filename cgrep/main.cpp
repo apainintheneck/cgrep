@@ -9,6 +9,7 @@
 #include "grep_factory.hpp"
 #include "glob.hpp"
 #include "parse_input.hpp"
+#include "output_strategy.hpp"
 
 void help() {
    std::cout <<
@@ -46,7 +47,7 @@ bool has_all(const std::vector<bool>& required) {
    return std::all_of(required.begin(), required.end(), [](bool flag){ return flag; });
 }
 
-void grep(std::vector<std::string> filenames, GrepFactory::Patterns patterns) {
+void grep(const std::vector<std::string>& filenames, const GrepFactory::Patterns& patterns, const OutputStrategy* output) {
    std::string buffer;
    std::vector<std::string> line_buffer;
    bool found_match = false;
@@ -79,10 +80,7 @@ void grep(std::vector<std::string> filenames, GrepFactory::Patterns patterns) {
       }
       
       if(not rejected and has_all(required_matches)) {
-         // This is where the different output strategies should go.
-         found_match = true;
-         
-         print(line_buffer, filename);
+         found_match = output->add(filename, line_buffer) or found_match;
       }
       line_buffer.clear();
    }
@@ -91,13 +89,13 @@ void grep(std::vector<std::string> filenames, GrepFactory::Patterns patterns) {
 }
 
 int main(int argc, const char * argv[]) {
-   const auto options = get_options(argc, argv);
+   const auto options = parse_options(argc, argv);
    if(argc == 1 or options.count("-h") or options.count("--help")) {
       help();
       exit(EXIT_SUCCESS);
    }
    
-   const auto filepaths = glob_files(get_args(argc, argv));
+   const auto filepaths = glob_files(parse_args(argc, argv));
    if(filepaths.empty()) {
       std::cout << "No files to search\n";
       exit(EXIT_FAILURE);
@@ -108,6 +106,21 @@ int main(int argc, const char * argv[]) {
       std::cout << "No patterns to match (as denoted by the '=')\n";
       exit(EX_USAGE);
    }
+   
+   const auto& out_file_path = parse_out_file_path(options);
+   if(out_file_path.empty()) {
+      const auto output = get_output_strategy(options, std::cout);
 
-   grep(filepaths, patterns);
+      grep(filepaths, patterns, output.get());
+   } else {
+      std::ofstream out_file(out_file_path);
+      if(not out_file.is_open()) {
+         std::cout << "Cannot open output file: " << out_file_path << '\n';
+         exit(EX_IOERR);
+      }
+      
+      const auto output = get_output_strategy(options, out_file);
+
+      grep(filepaths, patterns, output.get());
+   }
 }

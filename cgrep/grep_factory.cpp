@@ -5,20 +5,20 @@
 #include <sysexits.h>
 
 GrepFactory::GrepFactory(const std::map<std::string, std::string>& options) {
-   flags = std::regex::optimize;
+   flags_ = std::regex::optimize;
    
    if(options.count("-i") or options.count("--ignore-case")) {
-      flags |= std::regex::icase;
+      flags_ |= std::regex::icase;
    }
    
    if(options.count("-E") or options.count("--extended-regexp")) {
-      flags |= std::regex::egrep;
+      flags_ |= std::regex::egrep;
    } else {
-      flags |= std::regex::grep;
+      flags_ |= std::regex::grep;
    }
    
-   if(options.count("--file")) filepath = options.at("--file");
-   else if(options.count("-f")) filepath = options.at("-f");
+   if(options.count("--file")) filepath_ = options.at("--file");
+   else if(options.count("-f")) filepath_ = options.at("-f");
 }
 
 std::string parse_pattern(const std::string& line) {
@@ -57,7 +57,7 @@ GrepFactory::Patterns GrepFactory::get_patterns_from_stdin() {
       auto pattern = parse_pattern(buffer);
       if(pattern.empty()) continue;
       
-      auto grep = std::regex(pattern, flags);
+      auto grep = std::regex(pattern, flags_);
       switch(buffer.front()) {
          case '+':
             patterns.require.push_back(grep);
@@ -83,9 +83,9 @@ GrepFactory::Patterns GrepFactory::get_patterns_from_stdin() {
 
 // From file
 GrepFactory::Patterns GrepFactory::get_patterns_from_file() {
-   std::ifstream file(filepath);
+   std::ifstream file(filepath_);
    if(not file.is_open()) {
-      std::cout << "Unable to open pattern file: " << filepath << '\n';
+      std::cout << "Unable to open pattern file: " << filepath_ << '\n';
       exit(EX_NOINPUT);
    }
    
@@ -100,7 +100,7 @@ GrepFactory::Patterns GrepFactory::get_patterns_from_file() {
       auto pattern = parse_pattern(buffer);
       if(pattern.empty()) continue;
       
-      auto grep = std::regex(pattern, flags);
+      auto grep = std::regex(pattern, flags_);
       switch(buffer.front()) {
          case '+':
             patterns.require.push_back(grep);
@@ -122,7 +122,7 @@ GrepFactory::Patterns GrepFactory::get_patterns_from_file() {
 
 // Decide between getting patterns from input or a file.
 GrepFactory::Patterns GrepFactory::get_patterns() {
-   if(filepath.empty()) {
+   if(filepath_.empty()) {
       return get_patterns_from_stdin();
    } else {
       return get_patterns_from_file();
