@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sysexits.h>
 
-void GrepFactory::set_options(const std::map<std::string, std::string>& options) {
+GrepFactory::GrepFactory(const std::map<std::string, std::string>& options) {
    flags = std::regex::optimize;
    
    if(options.count("-i") or options.count("--ignore-case")) {
@@ -16,6 +16,9 @@ void GrepFactory::set_options(const std::map<std::string, std::string>& options)
    } else {
       flags |= std::regex::grep;
    }
+   
+   if(options.count("--file")) filepath = options.at("--file");
+   else if(options.count("-f")) filepath = options.at("-f");
 }
 
 std::string parse_pattern(const std::string& line) {
@@ -35,14 +38,14 @@ std::string parse_pattern(const std::string& line) {
 }
 
 // From stdin
-GrepFactory::lists GrepFactory::get_regexes() {
+GrepFactory::Patterns GrepFactory::get_patterns_from_stdin() {
    std::cout << "# Enter grep patterns starting with...\n";
    std::cout << "#   '+' for required patterns\n";
    std::cout << "#   '-' for rejected patterns\n";
    std::cout << "#   '=' for matched patterns\n";
    std::cout << "# Enter a blank line to submit.\n";
    
-   GrepFactory::lists regexes;
+   GrepFactory::Patterns patterns;
    
    std::cout << "> ";
    std::string buffer;
@@ -54,16 +57,16 @@ GrepFactory::lists GrepFactory::get_regexes() {
       auto pattern = parse_pattern(buffer);
       if(pattern.empty()) continue;
       
-      auto regex = std::regex(pattern, flags);
+      auto grep = std::regex(pattern, flags);
       switch(buffer.front()) {
          case '+':
-            regexes.require.push_back(regex);
+            patterns.require.push_back(grep);
             break;
          case '-':
-            regexes.reject.push_back(regex);
+            patterns.reject.push_back(grep);
             break;
          case '=':
-            regexes.match.push_back(regex);
+            patterns.match.push_back(grep);
             break;
          default:
             std::cout << "Invalid option (" << buffer.front() << ")\n";
@@ -75,18 +78,18 @@ GrepFactory::lists GrepFactory::get_regexes() {
    
    std::cout << '\n';
    
-   return regexes;
+   return patterns;
 }
 
 // From file
-GrepFactory::lists GrepFactory::get_regexes(const std::string& filepath) {
+GrepFactory::Patterns GrepFactory::get_patterns_from_file() {
    std::ifstream file(filepath);
    if(not file.is_open()) {
       std::cout << "Unable to open pattern file: " << filepath << '\n';
       exit(EX_NOINPUT);
    }
    
-   GrepFactory::lists regexes;
+   GrepFactory::Patterns patterns;
    
    std::string buffer;
    while(std::getline(file, buffer)) {
@@ -97,16 +100,16 @@ GrepFactory::lists GrepFactory::get_regexes(const std::string& filepath) {
       auto pattern = parse_pattern(buffer);
       if(pattern.empty()) continue;
       
-      auto regex = std::regex(pattern, flags);
+      auto grep = std::regex(pattern, flags);
       switch(buffer.front()) {
          case '+':
-            regexes.require.push_back(regex);
+            patterns.require.push_back(grep);
             break;
          case '-':
-            regexes.reject.push_back(regex);
+            patterns.reject.push_back(grep);
             break;
          case '=':
-            regexes.match.push_back(regex);
+            patterns.match.push_back(grep);
             break;
          default:
             // Skip everything else
@@ -114,13 +117,14 @@ GrepFactory::lists GrepFactory::get_regexes(const std::string& filepath) {
       }
    }
    
-   return regexes;
+   return patterns;
 }
 
 // Decide between getting patterns from input or a file.
-GrepFactory::lists GrepFactory::get_regexes(const std::map<std::string, std::string>& options) {
-   if(options.count("-f")) return get_regexes(options.at("-f"));
-   if(options.count("--file")) return get_regexes(options.at("--file"));
-   
-   return get_regexes();
+GrepFactory::Patterns GrepFactory::get_patterns() {
+   if(filepath.empty()) {
+      return get_patterns_from_stdin();
+   } else {
+      return get_patterns_from_file();
+   }
 }

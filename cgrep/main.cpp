@@ -35,12 +35,6 @@ cgrep [-iEfh] [-f=patterns] [file ...]
 )~";
 }
 
-void print(const std::vector<std::string>& lines) {
-   for(const auto& line : lines) {
-      std::cout << line << '\n';
-   }
-}
-
 void print(const std::vector<std::string>& lines, const std::string& filename) {
    for(const auto& line : lines) {
       std::cout << filename << ": ";
@@ -48,44 +42,52 @@ void print(const std::vector<std::string>& lines, const std::string& filename) {
    }
 }
 
-bool has_required(const std::vector<bool>& required) {
+bool has_all(const std::vector<bool>& required) {
    return std::all_of(required.begin(), required.end(), [](bool flag){ return flag; });
 }
 
-void grep(std::vector<std::string> filenames, GrepFactory::lists regexes) {
+void grep(std::vector<std::string> filenames, GrepFactory::Patterns patterns) {
    std::string buffer;
+   std::vector<std::string> line_buffer;
+   bool found_match = false;
    const auto is_match = [&buffer](const std::regex& grep){
       return std::regex_search(buffer, grep);
    };
    
    for(const auto& filename : filenames) {
       std::ifstream file(filename);
-      std::vector<std::string> line_buffer;
-      std::vector<bool> req_matches(regexes.require.size());
+      std::vector<bool> required_matches(patterns.require.size());
       bool rejected = false;
       
       while(std::getline(file, buffer)) {
-         if(std::any_of(regexes.reject.begin(), regexes.reject.end(), is_match)) {
+         // Check rejected patterns
+         if(std::any_of(patterns.reject.begin(), patterns.reject.end(), is_match)) {
             rejected = true;
             break;
          }
          
-         for(int i = 0; i < req_matches.size(); ++i) {
-            if(req_matches[i]) continue;
-            else req_matches[i] = is_match(regexes.require[i]);
+         // Check required patterns
+         for(int i = 0; i < required_matches.size(); ++i) {
+            if(required_matches[i]) continue;
+            else required_matches[i] = is_match(patterns.require[i]);
          }
          
-         if(std::any_of(regexes.match.begin(), regexes.match.end(), is_match)) {
-            line_buffer.push_back(buffer);
+         // Check match patterns
+         if(std::any_of(patterns.match.begin(), patterns.match.end(), is_match)) {
+            line_buffer.push_back(std::move(buffer));
          }
       }
       
-      if(not rejected and has_required(req_matches)) {
+      if(not rejected and has_all(required_matches)) {
          // This is where the different output strategies should go.
-         if(filenames.size() > 1) print(line_buffer, filename);
-         else print(line_buffer);
+         found_match = true;
+         
+         print(line_buffer, filename);
       }
+      line_buffer.clear();
    }
+   
+   if(not found_match) exit(EXIT_FAILURE);
 }
 
 int main(int argc, const char * argv[]) {
@@ -95,20 +97,17 @@ int main(int argc, const char * argv[]) {
       exit(EXIT_SUCCESS);
    }
    
-   GrepFactory factory;
-   factory.set_options(options);
-   
    const auto filepaths = glob_files(get_args(argc, argv));
    if(filepaths.empty()) {
       std::cout << "No files to search\n";
       exit(EXIT_FAILURE);
    }
    
-   const auto regexes = factory.get_regexes(options);
-   if(regexes.match.empty()) {
+   const auto patterns = GrepFactory(options).get_patterns();
+   if(patterns.match.empty()) {
       std::cout << "No patterns to match (as denoted by the '=')\n";
       exit(EX_USAGE);
    }
 
-   grep(filepaths, regexes);
+   grep(filepaths, patterns);
 }

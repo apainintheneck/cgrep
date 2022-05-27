@@ -7,20 +7,22 @@
 
 class GrepFactory {
 public:
-   struct lists {
+   struct Patterns {
       std::vector<std::regex> require;
       std::vector<std::regex> reject;
       std::vector<std::regex> match;
    };
    
-   void set_options(const std::map<std::string, std::string>& options);
-   // From stdin
-   lists get_regexes();
-   // From file
-   lists get_regexes(const std::string& filepath);
+   GrepFactory(const std::map<std::string, std::string>& options);
    // Decide on which to call based on options
-   lists get_regexes(const std::map<std::string, std::string>& options);
+   Patterns get_patterns();
+   
 private:
+   Patterns get_patterns_from_stdin();
+   Patterns get_patterns_from_file();
+   
    // Options
    std::regex_constants::syntax_option_type flags;
+   // Filepath
+   std::string filepath;
 };
