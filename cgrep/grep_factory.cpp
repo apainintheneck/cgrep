@@ -17,8 +17,8 @@ GrepFactory::GrepFactory(const std::map<std::string, std::string>& options) {
       flags_ |= std::regex::grep;
    }
    
-   if(options.count("--file")) filepath_ = options.at("--file");
-   else if(options.count("-f")) filepath_ = options.at("-f");
+   if(options.count("--pattern-file")) filepath_ = options.at("--pattern-file");
+   else if(options.count("-p")) filepath_ = options.at("-p");
 }
 
 std::string parse_pattern(const std::string& line) {

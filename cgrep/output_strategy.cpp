@@ -60,7 +60,7 @@ bool MatchFilesStrategy::add(const std::string &filename, const std::vector<std:
    return true;
 }
 
-std::unique_ptr<OutputStrategy> get_output_strategy(const std::map<std::string, std::string>& options, std::ostream& out) {
+std::unique_ptr<OutputStrategy> OutputStrategy::init(const std::map<std::string, std::string>& options, std::ostream& out) {
    if(options.count("-c") or options.count("--count")) {
       return std::make_unique<LineCountStrategy>(out);
    }

@@ -18,29 +18,32 @@ R"~(
 -------
 Conditionally grep files using multiple
 required(+), rejected(-) and matched(=) patterns.
+Required and rejected patterns are resolved
+before returning matches.
    
 [usage]
 -------
-cgrep [-iEfh] [-f=patterns] [file ...]
+cgrep [-cEhilL] [-p=pattern-file] [-o=output-file] [file ...]
    
 [options]
 ---------
--i / --ignore-case
-   Sets grep to ignore case when matching.
+-c / --count
+   Count the number of matched lines in each file.
 -E / --extended-regexp
    Sets pattern matching to egrep.
--f= / --file=
-   Reads patterns from a file.
 -h / --help
    Shows this page.
+-i / --ignore-case
+   Sets grep to ignore case when matching.
+-l / --files-with-matches
+   Lists all files with matched lines.
+-L / --files-without-matches
+   Lists all files without matched lines in search set.
+-o= / --output-file=
+   Writes results to a file.
+-p= / --pattern-file=
+   Reads grep patterns from a file.
 )~";
-}
-
-void print(const std::vector<std::string>& lines, const std::string& filename) {
-   for(const auto& line : lines) {
-      std::cout << filename << ": ";
-      std::cout << line << '\n';
-   }
 }
 
 bool has_all(const std::vector<bool>& required) {
@@ -109,7 +112,7 @@ int main(int argc, const char * argv[]) {
    
    const auto& out_file_path = parse_out_file_path(options);
    if(out_file_path.empty()) {
-      const auto output = get_output_strategy(options, std::cout);
+      const auto output = OutputStrategy::init(options, std::cout);
 
       grep(filepaths, patterns, output.get());
    } else {
@@ -119,7 +122,7 @@ int main(int argc, const char * argv[]) {
          exit(EX_IOERR);
       }
       
-      const auto output = get_output_strategy(options, out_file);
+      const auto output = OutputStrategy::init(options, out_file);
 
       grep(filepaths, patterns, output.get());
    }
