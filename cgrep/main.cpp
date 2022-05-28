@@ -23,7 +23,7 @@ before returning matches.
    
 [usage]
 -------
-cgrep [-cEhilL] [-p=pattern-file] [-o=output-file] [file ...]
+cgrep [-cEhilLn] [-p=pattern-file] [-o=output-file] [file ...]
    
 [options]
 ---------
@@ -39,6 +39,8 @@ cgrep [-cEhilL] [-p=pattern-file] [-o=output-file] [file ...]
    Lists all files with matched lines.
 -L / --files-without-matches
    Lists all files without matched lines in search set.
+-n / --line-number
+   Each output line is preceded by its relative line number.
 -o= / --output-file=
    Writes results to a file.
 -p= / --pattern-file=
@@ -52,7 +54,7 @@ bool has_all(const std::vector<bool>& required) {
 
 void grep(const std::vector<std::string>& filenames, const GrepFactory::Patterns& patterns, const OutputStrategy* output) {
    std::string buffer;
-   std::vector<std::string> line_buffer;
+   std::vector<line> line_buffer;
    bool found_match = false;
    const auto is_match = [&buffer](const std::regex& grep){
       return std::regex_search(buffer, grep);
@@ -63,7 +65,7 @@ void grep(const std::vector<std::string>& filenames, const GrepFactory::Patterns
       std::vector<bool> required_matches(patterns.require.size());
       bool rejected = false;
       
-      while(std::getline(file, buffer)) {
+      for(size_t line_no = 1; std::getline(file, buffer); ++line_no) {
          // Check rejected patterns
          if(std::any_of(patterns.reject.begin(), patterns.reject.end(), is_match)) {
             rejected = true;
@@ -78,7 +80,7 @@ void grep(const std::vector<std::string>& filenames, const GrepFactory::Patterns
          
          // Check match patterns
          if(std::any_of(patterns.match.begin(), patterns.match.end(), is_match)) {
-            line_buffer.push_back(std::move(buffer));
+            line_buffer.push_back({std::move(buffer), line_no});
          }
       }
       
