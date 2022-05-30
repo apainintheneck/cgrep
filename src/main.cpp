@@ -73,7 +73,7 @@ void grep(const std::vector<std::string>& filenames, const GrepFactory::Patterns
          }
          
          // Check required patterns
-         for(int i = 0; i < required_matches.size(); ++i) {
+         for(size_t i = 0; i < required_matches.size(); ++i) {
             if(required_matches[i]) continue;
             else required_matches[i] = is_match(patterns.require[i]);
          }

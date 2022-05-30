@@ -13,7 +13,7 @@ std::vector<std::string> glob(const std::vector<std::string>& patterns) {
    glob(patterns.front().c_str(), flags, NULL, &globbuf);
    // Every following call to glob() with GLOB_APPEND set.
    flags |= GLOB_APPEND;
-   for(int i = 1; i < patterns.size(); ++i) {
+   for(size_t i = 1; i < patterns.size(); ++i) {
       glob(patterns[i].c_str(), flags, NULL, &globbuf);
    }
    
