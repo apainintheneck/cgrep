@@ -56,10 +56,12 @@ before returning matches.
    
 [usage]
 -------
-cgrep [-cEhilLn] [-p=pattern-file] [-o=output-file] [file ...]
+cgrep [-acEhilLn] [-p=pattern-file] [-o=output-file] [file ...]
    
 [options]
 ---------
+-a / --again
+   Rerun previous query again.
 -c / --count
    Count the number of matched lines in each file.
 -E / --extended-regexp
