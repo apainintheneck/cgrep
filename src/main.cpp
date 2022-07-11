@@ -7,9 +7,9 @@
 #include <sysexits.h>
 
 #include "grep_factory.hpp"
-#include "glob.hpp"
 #include "parse_input.hpp"
 #include "output_strategy.hpp"
+#include "util.hpp"
 
 void help() {
    std::cout <<
@@ -23,10 +23,12 @@ before returning matches.
    
 [usage]
 -------
-cgrep [-cEhilLn] [-p=pattern-file] [-o=output-file] [file ...]
+cgrep [-acEhilLn] [-p=pattern-file] [-o=output-file] [file ...]
    
 [options]
 ---------
+-a / --again
+   Rerun previous query again.
 -c / --count
    Count the number of matched lines in each file.
 -E / --extended-regexp
@@ -100,7 +102,7 @@ int main(int argc, const char * argv[]) {
       exit(EXIT_SUCCESS);
    }
    
-   const auto filepaths = glob_files(parse_args(argc, argv));
+   const auto filepaths = util::glob_files(parse_args(argc, argv));
    if(filepaths.empty()) {
       std::cout << "No files to search\n";
       exit(EXIT_FAILURE);

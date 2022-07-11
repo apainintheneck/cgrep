@@ -1,6 +1,9 @@
-#include "glob.hpp"
+#include "util.hpp"
 
+#include <cstdlib>
 #include <glob.h>
+
+namespace util {
 
 std::vector<std::string> glob(const std::vector<std::string>& patterns) {
    if(patterns.empty()) return {};
@@ -31,3 +34,19 @@ std::vector<std::string> glob_files(const std::vector<std::string>& patterns) {
    paths.erase(last, paths.end());
    return paths;
 }
+
+std::string expand_path(const std::string& path) {
+   if(path.empty()) return "";
+   
+   if(path.front() == '~') {
+      if(path.size() == 1) {
+         return std::getenv("HOME");
+      } else if (path[1] == '/') {
+         return std::string(std::getenv("HOME")) + path.substr(1);
+      }
+   }
+   
+   return path;
+}
+
+} // namespace util

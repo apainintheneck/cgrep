@@ -1,4 +1,5 @@
 #include "parse_input.hpp"
+#include "util.hpp"
 
 std::vector<std::string> parse_args(const int argc, const char* argv[]) {
    std::vector<std::string> args;
@@ -37,5 +38,5 @@ std::string parse_out_file_path(const std::map<std::string, std::string>& option
       out_file_path = options.at("--output-file");
    }
    
-   return out_file_path;
+   return util::expand_path(out_file_path);
 }

@@ -1,10 +1,16 @@
 #include "grep_factory.hpp"
 
 #include <iostream>
+#include <filesystem>
 #include <fstream>
 #include <sysexits.h>
 
+#include "util.hpp"
+
+const auto prev_query_path = util::expand_path("~/.cgrep_previous_query");
+
 GrepFactory::GrepFactory(const std::map<std::string, std::string>& options) {
+   // Build regex flags
    flags_ = std::regex::optimize;
    
    if(options.count("-i") or options.count("--ignore-case")) {
@@ -17,10 +23,21 @@ GrepFactory::GrepFactory(const std::map<std::string, std::string>& options) {
       flags_ |= std::regex::grep;
    }
    
-   if(options.count("--pattern-file")) filepath_ = options.at("--pattern-file");
-   else if(options.count("-p")) filepath_ = options.at("-p");
+   // Get pattern file if applicable
+   if((options.count("--pattern-file") || options.count("-p"))
+      && (options.count("--again") || options.count("-a"))) {
+      
+      std::cout << "Error: Conflicting options -a and -p\n";
+      exit(EX_USAGE);
+   }
+   
+   if(options.count("--pattern-file")) filepath_ = util::expand_path(options.at("--pattern-file"));
+   else if(options.count("-p")) filepath_ = util::expand_path(options.at("-p"));
+   else if(options.count("--again") || options.count("-a")) filepath_ = prev_query_path;
 }
 
+// Parse query pattern by either trimming whitespace or
+// only returning the string between quotes or backticks.
 std::string parse_pattern(const std::string& line) {
    const auto start = line.find_first_not_of(' ', 1);
    
@@ -39,6 +56,13 @@ std::string parse_pattern(const std::string& line) {
 
 // From stdin
 GrepFactory::Patterns GrepFactory::get_patterns_from_stdin() {
+   // Open file to save current query
+   std::ofstream save_query_file(prev_query_path);
+   if(not save_query_file.is_open()) {
+      std::cout << "Error: Unable to save query\n\n";
+   }
+   
+   // Prompt user for query
    std::cout << "# Enter grep patterns starting with...\n";
    std::cout << "#   '+' for required patterns\n";
    std::cout << "#   '-' for rejected patterns\n";
@@ -49,6 +73,7 @@ GrepFactory::Patterns GrepFactory::get_patterns_from_stdin() {
    
    std::cout << "> ";
    std::string buffer;
+   // Parse each pattern
    while(std::getline(std::cin, buffer)) {
       if(buffer.empty()) break;
       
@@ -61,12 +86,15 @@ GrepFactory::Patterns GrepFactory::get_patterns_from_stdin() {
       switch(buffer.front()) {
          case '+':
             patterns.require.push_back(grep);
+            save_query_file << "+ " << pattern << '\n';
             break;
          case '-':
             patterns.reject.push_back(grep);
+            save_query_file << "- " << pattern << '\n';
             break;
          case '=':
             patterns.match.push_back(grep);
+            save_query_file << "= " << pattern << '\n';
             break;
          default:
             std::cout << "Invalid option (" << buffer.front() << ")\n";
@@ -117,14 +145,21 @@ GrepFactory::Patterns GrepFactory::get_patterns_from_file() {
       }
    }
    
+   // Save current query for later
+   if(filepath_ != prev_query_path) {
+      std::error_code err;
+      
+      if(not std::filesystem::copy_file(filepath_, prev_query_path, err)) {
+         std::cout << "Error: Unable to save query\n";
+      }
+   }
+   
    return patterns;
 }
 
 // Decide between getting patterns from input or a file.
 GrepFactory::Patterns GrepFactory::get_patterns() {
-   if(filepath_.empty()) {
-      return get_patterns_from_stdin();
-   } else {
-      return get_patterns_from_file();
-   }
+   return filepath_.empty()
+         ? get_patterns_from_stdin()
+         : get_patterns_from_file();
 }
