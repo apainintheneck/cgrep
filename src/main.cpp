@@ -7,7 +7,7 @@
 #include <sysexits.h>
 
 #include "grep_factory.hpp"
-#include "parse_input.hpp"
+#include "parse.hpp"
 #include "output_strategy.hpp"
 #include "util.hpp"
 
@@ -96,13 +96,13 @@ void grep(const std::vector<std::string>& filenames, const GrepFactory::Patterns
 }
 
 int main(int argc, const char * argv[]) {
-   const auto options = parse_options(argc, argv);
+   const auto options = parse::options(argc, argv);
    if(argc == 1 or options.count("-h") or options.count("--help")) {
       help();
       exit(EXIT_SUCCESS);
    }
    
-   const auto filepaths = util::glob_files(parse_args(argc, argv));
+   const auto filepaths = util::glob_files(parse::args(argc, argv));
    if(filepaths.empty()) {
       std::cout << "No files to search\n";
       exit(EXIT_FAILURE);
@@ -114,7 +114,7 @@ int main(int argc, const char * argv[]) {
       exit(EX_USAGE);
    }
    
-   const auto& out_file_path = parse_out_file_path(options);
+   const auto& out_file_path = parse::outfile_path(options);
    if(out_file_path.empty()) {
       const auto output = OutputStrategy::init(options, std::cout);
 

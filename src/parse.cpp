@@ -1,7 +1,9 @@
-#include "parse_input.hpp"
+#include "parse.hpp"
 #include "util.hpp"
 
-std::vector<std::string> parse_args(const int argc, const char* argv[]) {
+namespace parse {
+
+std::vector<std::string> args(const int argc, const char* argv[]) {
    std::vector<std::string> args;
    for(int i = 1; i < argc; ++i) {
       if(strlen(argv[i]) > 0 and argv[i][0] != '-') {
@@ -18,7 +20,7 @@ std::pair<std::string, std::string> split_option(const std::string& str) {
    else return {str.substr(0, equals_sign), str.substr(equals_sign + 1)};
 }
 
-std::map<std::string, std::string> parse_options(const int argc, const char* argv[]) {
+std::map<std::string, std::string> options(const int argc, const char* argv[]) {
    std::map<std::string, std::string> options;
    for(int i = 1; i < argc; ++i) {
       if(strlen(argv[i]) > 0 and argv[i][0] == '-') {
@@ -29,7 +31,7 @@ std::map<std::string, std::string> parse_options(const int argc, const char* arg
    return options;
 }
 
-std::string parse_out_file_path(const std::map<std::string, std::string>& options) {
+std::string outfile_path(const std::map<std::string, std::string>& options) {
    std::string out_file_path;
    
    if(options.count("-o")) {
@@ -40,3 +42,5 @@ std::string parse_out_file_path(const std::map<std::string, std::string>& option
    
    return util::expand_path(out_file_path);
 }
+
+} // namespace parse
