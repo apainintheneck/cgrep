@@ -150,7 +150,7 @@ GrepFactory::Patterns GrepFactory::get_patterns_from_file() {
       std::error_code err;
       
       if(not std::filesystem::copy_file(filepath_, prev_query_path, err)) {
-         std::cout << "Error: Unable to save query\n";
+         std::cout << "Error: Unable to save query\n\n";
       }
    }
    
