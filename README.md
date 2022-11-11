@@ -29,7 +29,7 @@ src/grep_factory.hpp:4
 src/output_strategy.hpp:5
 src/parse_input.hpp:3
 ```
----
+
 #### Those patterns can also be sourced from a file.
 ```
 $ cgrep src/*.cpp src/*.hpp --count --pattern-file=patterns.txt
@@ -42,6 +42,14 @@ src/parse_input.hpp:3
 + <map> 
 + <vector>
 = #include
+```
+
+#### Also, the previous query can be rerun with the `--again` option.
+```
+$ cgrep src/*.cpp src/*.hpp --count --again
+src/grep_factory.hpp:4
+src/output_strategy.hpp:5
+src/parse_input.hpp:3
 ```
 
 ## Help Page
