@@ -27,7 +27,7 @@ GrepFactory::GrepFactory(const std::map<std::string, std::string>& options) {
    if((options.count("--pattern-file") || options.count("-p"))
       && (options.count("--again") || options.count("-a"))) {
       
-      std::cout << "Error: Conflicting options -a and -p\n";
+      std::cerr << "Error: Conflicting options -a and -p\n";
       exit(EX_USAGE);
    }
    
@@ -59,19 +59,19 @@ GrepFactory::Patterns GrepFactory::get_patterns_from_stdin() {
    // Open file to save current query
    std::ofstream save_query_file(prev_query_path);
    if(not save_query_file.is_open()) {
-      std::cout << "Error: Unable to save query\n\n";
+      std::cerr << "Error: Unable to save query\n\n";
    }
    
    // Prompt user for query
-   std::cout << "# Enter grep patterns starting with...\n";
-   std::cout << "#   '+' for required patterns\n";
-   std::cout << "#   '-' for rejected patterns\n";
-   std::cout << "#   '=' for matched patterns\n";
-   std::cout << "# Enter a blank line to submit.\n";
+   std::cerr << "# Enter grep patterns starting with...\n";
+   std::cerr << "#   '+' for required patterns\n";
+   std::cerr << "#   '-' for rejected patterns\n";
+   std::cerr << "#   '=' for matched patterns\n";
+   std::cerr << "# Enter a blank line to submit.\n";
    
    GrepFactory::Patterns patterns;
    
-   std::cout << "> ";
+   std::cerr << "> ";
    std::string buffer;
    // Parse each pattern
    while(std::getline(std::cin, buffer)) {
@@ -97,14 +97,14 @@ GrepFactory::Patterns GrepFactory::get_patterns_from_stdin() {
             save_query_file << "= " << pattern << '\n';
             break;
          default:
-            std::cout << "Invalid option (" << buffer.front() << ")\n";
-            std::cout << "Use one of ['+', '-', '=']\n";
+            std::cerr << "Invalid option (" << buffer.front() << ")\n";
+            std::cerr << "Use one of ['+', '-', '=']\n";
             break;
       }
-      std::cout << "> ";
+      std::cerr << "> ";
    }
    
-   std::cout << '\n';
+   std::cerr << '\n';
    
    return patterns;
 }
@@ -113,7 +113,7 @@ GrepFactory::Patterns GrepFactory::get_patterns_from_stdin() {
 GrepFactory::Patterns GrepFactory::get_patterns_from_file() {
    std::ifstream file(filepath_);
    if(not file.is_open()) {
-      std::cout << "Unable to open pattern file: " << filepath_ << '\n';
+      std::cerr << "Unable to open pattern file: " << filepath_ << '\n';
       exit(EX_NOINPUT);
    }
    
@@ -150,7 +150,7 @@ GrepFactory::Patterns GrepFactory::get_patterns_from_file() {
       std::error_code err;
       
       if(not std::filesystem::copy_file(filepath_, prev_query_path, err)) {
-         std::cout << "Error: Unable to save query\n\n";
+         std::cerr << "Error: Unable to save query\n\n";
       }
    }
    

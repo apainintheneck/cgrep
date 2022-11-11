@@ -107,13 +107,13 @@ int main(int argc, const char * argv[]) {
    
    const auto filepaths = util::glob_files(parse::args(argc, argv));
    if(filepaths.empty()) {
-      std::cout << "No files to search\n";
+      std::cerr << "No files to search\n";
       exit(EXIT_FAILURE);
    }
    
    const auto patterns = GrepFactory(options).get_patterns();
    if(patterns.match.empty()) {
-      std::cout << "No patterns to match (as denoted by the '=')\n";
+      std::cerr << "No patterns to match (as denoted by the '=')\n";
       exit(EX_USAGE);
    }
    
@@ -125,7 +125,7 @@ int main(int argc, const char * argv[]) {
    } else {
       std::ofstream out_file(out_file_path);
       if(not out_file.is_open()) {
-         std::cout << "Cannot open output file: " << out_file_path << '\n';
+         std::cerr << "Cannot open output file: " << out_file_path << '\n';
          exit(EX_IOERR);
       }
       
