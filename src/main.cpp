@@ -5,6 +5,7 @@
 #include <fstream>
 #include <algorithm>
 #include <sysexits.h>
+#include <memory>
 
 #include "grep_factory.hpp"
 #include "parse.hpp"
@@ -54,7 +55,9 @@ bool has_all(const std::vector<bool>& required) {
    return std::all_of(required.begin(), required.end(), [](bool flag){ return flag; });
 }
 
-void grep(const std::vector<std::string>& filenames, const GrepFactory::Patterns& patterns, const OutputStrategy* output) {
+void grep(const std::vector<std::string>& filenames,
+          const GrepFactory::Patterns& patterns,
+          const std::unique_ptr<OutputStrategy> output) {
    std::string buffer;
    std::vector<line> line_buffer;
    bool found_match = false;
@@ -116,9 +119,9 @@ int main(int argc, const char * argv[]) {
    
    const auto& out_file_path = parse::outfile_path(options);
    if(out_file_path.empty()) {
-      const auto output = OutputStrategy::init(options, std::cout);
+      auto output = OutputStrategy::init(options, std::cout);
 
-      grep(filepaths, patterns, output.get());
+      grep(filepaths, patterns, std::move(output));
    } else {
       std::ofstream out_file(out_file_path);
       if(not out_file.is_open()) {
@@ -126,8 +129,8 @@ int main(int argc, const char * argv[]) {
          exit(EX_IOERR);
       }
       
-      const auto output = OutputStrategy::init(options, out_file);
+      auto output = OutputStrategy::init(options, out_file);
 
-      grep(filepaths, patterns, output.get());
+      grep(filepaths, patterns, std::move(output));
    }
 }
