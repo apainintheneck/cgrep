@@ -117,7 +117,7 @@ int main(int argc, const char * argv[]) {
       exit(EX_USAGE);
    }
    
-   const auto& out_file_path = parse::outfile_path(options);
+   const auto out_file_path = parse::outfile_path(options);
    if(out_file_path.empty()) {
       auto output = OutputStrategy::init(options, std::cout);
 
